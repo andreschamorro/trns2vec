@@ -10,9 +10,7 @@ logging.basicConfig(level=logging.INFO)
 DEFAULT_SIZE = 10000
 DEFAULT_RARE_THRESHOLD = 0
 
-
 _UNKNOWN = '<unk>'
-
 
 class Vocabulary(object):
 

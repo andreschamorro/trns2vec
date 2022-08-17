@@ -1,5 +1,5 @@
 import itertools 
-from progressbar import progressbar
+from tqdm import tqdm
 import random
 
 from keras.utils import to_categorical
@@ -9,7 +9,7 @@ import numpy as np
 def data_generator(token_ids_by_doc_id, window_size, vocab_size):
     doc_ids = list(token_ids_by_doc_id.keys())
   
-    for doc_id in progressbar(itertools.cycle(doc_ids)):
+    for doc_id in itertools.cycle(doc_ids):
         token_ids = token_ids_by_doc_id[doc_id]
         num_tokens = len(token_ids)
     
@@ -25,7 +25,10 @@ def data_generator(token_ids_by_doc_id, window_size, vocab_size):
 
 
 def batch(data, batch_size=32):
-    while True:
+    def inf_generator():
+        while True:
+            yield
+    for _ in tqdm(inf_generator()):
         batch = itertools.islice(data, batch_size)
     
         x = []
