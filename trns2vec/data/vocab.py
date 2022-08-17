@@ -2,11 +2,6 @@ import collections
 import logging
 import pickle
 
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
-
-
 DEFAULT_SIZE = 10000
 DEFAULT_RARE_THRESHOLD = 0
 
@@ -14,9 +9,14 @@ _UNKNOWN = '<unk>'
 
 class Vocabulary(object):
 
-    def __init__(self):
+    def __init__(self, logger=None):
         self._vocab = {}
         self._vocab_inverse = {}
+        self._logger = logger
+
+        if self._logger is None:
+            self._logger = logging.getLogger(__name__)
+            logging.basicConfig(level=logging.INFO)
 
     @property
     def size(self):
@@ -28,7 +28,7 @@ class Vocabulary(object):
     def build(self, tokens,
               max_size=DEFAULT_SIZE,
               rare_threshold=DEFAULT_RARE_THRESHOLD):
-        logger.info('Building vocab')
+        self._logger.info('Building vocab')
 
         def _unk(token, count):
             """Replace a token by unk if count is below threshold."""
@@ -42,19 +42,19 @@ class Vocabulary(object):
 
         self._vocab_inverse = _inverse(self._vocab)
 
-        logger.info('Vocab size: %d', self.size)
+        self._logger.info('Vocab size: %d', self.size)
 
     def load(self, path):
-        logger.info('Loading vocab from %s', path)
+        self._logger.info('Loading vocab from %s', path)
 
         with open(path, 'rb') as f:
             self._vocab = pickle.load(f) or {}
         self._vocab_inverse = _inverse(self._vocab)
 
-        logger.info('Vocab size: %d', self.size)
+        self._logger.info('Vocab size: %d', self.size)
 
     def save(self, path):
-        logger.info('Saving vocab to %s', path)
+        self._logger.info('Saving vocab to %s', path)
 
         with open(path, 'wb') as f:
             pickle.dump(self._vocab, f)

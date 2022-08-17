@@ -1,16 +1,11 @@
 from abc import ABCMeta
-import logging
 
+import logging
 import h5py
-from tensorflow.keras.callbacks import Callback, EarlyStopping, ModelCheckpoint
+from tensorflow.keras.callbacks import Callback, EarlyStopping, ModelCheckpoint, CSVLogger
 from tensorflow.keras.models import load_model
 from tensorflow.keras.optimizers import SGD
 import numpy as np
-
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
-
 
 DEFAULT_WINDOW_SIZE = 8
 DEFAULT_EMBEDDING_SIZE = 300
@@ -27,7 +22,7 @@ class Doc2VecModel(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, window_size, vocab_size, num_docs,
-                 embedding_size=DEFAULT_EMBEDDING_SIZE):
+                 embedding_size=DEFAULT_EMBEDDING_SIZE, logger=None):
         self._window_size = window_size
         self._vocab_size = vocab_size
         self._num_docs = num_docs
@@ -35,6 +30,11 @@ class Doc2VecModel(object):
         self._embedding_size = embedding_size
 
         self._model = None
+        self._logger = logger
+
+        if self._logger is None:
+            self._logger = logging.getLogger(__name__)
+            logging.basicConfig(level=logging.INFO)
 
     @property
     def doc_embeddings(self):
@@ -58,7 +58,8 @@ class Doc2VecModel(object):
               workers=1,
               use_multiprocessing=False,
               save_path=None, save_period=None,
-              save_doc_embeddings_path=None, save_doc_embeddings_period=None):
+              save_doc_embeddings_path=None, save_doc_embeddings_period=None, 
+              csv_logger_path=None):
 
         callbacks=[]
         if early_stopping_patience:
@@ -70,6 +71,9 @@ class Doc2VecModel(object):
         if save_doc_embeddings_path and save_doc_embeddings_period:
             callbacks.append(_SaveDocEmbeddings(save_doc_embeddings_path,
                                                 save_doc_embeddings_period))
+        if csv_logger_path:
+            callbacks.append(CSVLogger(
+                csv_logger_path, separator=',', append=False))
 
         history = self._model.fit(
                 dataset,
@@ -82,14 +86,14 @@ class Doc2VecModel(object):
         return history
 
     def save(self, path):
-        logger.info('Saving model to %s', path)
+        self._logger.info('Saving model to %s', path)
         self._model.save(path)
 
     def save_doc_embeddings(self, path):
         _write_doc_embeddings(self.doc_embeddings, path)
 
     def load(self, path):
-        logger.info('Loading model from %s', path)
+        self._logger.info('Loading model from %s', path)
         self._model = load_model(path)
 
 
@@ -115,6 +119,6 @@ def _doc_embeddings_from_model(keras_model):
 
 
 def _write_doc_embeddings(doc_embeddings, path):
-    logger.info('Saving doc embeddings to %s', path)
+    self._logger.info('Saving doc embeddings to %s', path)
     with h5py.File(path, 'w') as f:
         f.create_dataset(DOC_EMBEDDINGS_LAYER_NAME, data=doc_embeddings)

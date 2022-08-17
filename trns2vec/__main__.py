@@ -1,12 +1,11 @@
+import os
 import argparse
 import itertools
-import logging
+from datetime import datetime
 
+from utils import logger
 from data import vocab, batch_dm, batch_dbow, trns, tfdataset
 from model import dm, dbow, model
-
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 MODEL_TYPES = {
     'dm': (dm.DM, batch_dm.data_generator, batch_dm.batch),
@@ -25,6 +24,7 @@ def _parse_args():
     parser.add_argument('--model', default='dm',
                         choices=list(MODEL_TYPES.keys()),
                         help='Which model to use')
+    parser.add_argument('--logs_dir', help='Logger dir')
     parser.add_argument('--save', help='Path to save model')
     parser.add_argument('--save_period', 
                         type=int,
@@ -78,6 +78,8 @@ def _parse_args():
                         type=int,
                         help='Number of samples per epoch')
     parser.add_argument('--mp', dest='mp', action='store_true')
+    parser.add_argument('--no-csv-logs', dest='csv_logs', action='store_false')
+    parser.set_defaults(csv_logs=True)
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--train', dest='train', action='store_true')
@@ -89,12 +91,16 @@ def _parse_args():
 
 def main():
     args = _parse_args()
+    now = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+    log_file = os.path.join(args.logs_dir, 'logs-{}'.format(now))
+    logs = logger.get_logger('trns2vec', log_file)
 
+    logs.info('Loading bgzip file from {}'.format(args.path))
     tokens_by_trns_id = trns.tokens_by_trns_id(args.path, args.k)
 
     num_trns = len(tokens_by_trns_id)
 
-    v = vocab.Vocabulary()
+    v = vocab.Vocabulary(logger=logs)
     if args.load_vocab:
         v.load(args.load_vocab)
     else:
@@ -108,7 +114,7 @@ def main():
     model_class, data_generator, batcher = MODEL_TYPES[args.model]
 
     m = model_class(args.window_size, v.size, num_trns,
-                    embedding_size=args.embedding_size)
+                    embedding_size=args.embedding_size, logger=logs)
 
     if args.load:
         m.load(args.load) 
@@ -119,6 +125,9 @@ def main():
     elapsed_epochs = 0
 
     if args.train:
+
+
+        log_csv = os.path.join(args.logs_dir, 'logs-{}.csv'.format(now)) if args.csv_logs else None
 
         dataset = tfdataset.build_dataset(data_generator(
                 token_ids_by_trns_id,
@@ -135,7 +144,8 @@ def main():
                 save_path=args.save,
                 save_period=args.save_period,
                 save_doc_embeddings_path=args.save_trns_embeddings,
-                save_doc_embeddings_period=args.save_trns_embeddings_period)
+                save_doc_embeddings_period=args.save_trns_embeddings_period,
+                csv_logger_path=log_csv)
 
         elapsed_epochs = len(history.history['loss'])
 
