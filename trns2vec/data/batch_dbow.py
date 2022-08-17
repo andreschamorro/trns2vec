@@ -2,7 +2,7 @@ import itertools
 from tqdm import tqdm
 import random
 
-from keras.utils import to_categorical
+from tensorflow.keras.utils import to_categorical
 import numpy as np
 
 

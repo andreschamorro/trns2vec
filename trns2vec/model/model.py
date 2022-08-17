@@ -2,9 +2,9 @@ from abc import ABCMeta
 import logging
 
 import h5py
-from keras.callbacks import Callback, EarlyStopping, ModelCheckpoint
-from keras.models import load_model
-from keras.optimizers import SGD
+from tensorflow.keras.callbacks import Callback, EarlyStopping, ModelCheckpoint
+from tensorflow.keras.models import load_model
+from tensorflow.keras.optimizers import SGD
 import numpy as np
 
 

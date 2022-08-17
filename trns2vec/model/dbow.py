@@ -1,5 +1,5 @@
-from keras.layers import Dense, Embedding, Input, Lambda
-from keras.models import Model
+from tensorflow.keras.layers import Dense, Embedding, Input, Lambda
+from tensorflow.keras.models import Model
 import tensorflow as tf
 
 from model import lambdas, model
