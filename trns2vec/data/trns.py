@@ -14,7 +14,7 @@ _bases = ['T', 'C', 'A', 'G']
 
 OOV_ID = -1
 
-def _standardization(self, sequence):
+def _standardization(sequence):
     return re.sub(r'[^actg]', '', sequence.lower())
 
 def _read(bgz_file):
