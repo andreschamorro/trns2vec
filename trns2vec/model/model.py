@@ -90,6 +90,7 @@ class Doc2VecModel(object):
         self._model.save(path)
 
     def save_doc_embeddings(self, path):
+        self._logger.info('Saving doc embeddings to %s', path)
         _write_doc_embeddings(self.doc_embeddings, path)
 
     def load(self, path):
@@ -119,6 +120,5 @@ def _doc_embeddings_from_model(keras_model):
 
 
 def _write_doc_embeddings(doc_embeddings, path):
-    self._logger.info('Saving doc embeddings to %s', path)
     with h5py.File(path, 'w') as f:
         f.create_dataset(DOC_EMBEDDINGS_LAYER_NAME, data=doc_embeddings)
