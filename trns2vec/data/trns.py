@@ -20,7 +20,7 @@ def _standardization(self, sequence):
 def _read(bgz_file):
     with bgzf.open(bgz_file, 'r') as fa:
         for i, feature in enumerate(SeqIO.parse(fa, "fasta")):
-            yield i, str(feature.seq)
+            yield i, _standardization(str(feature.seq))
 
 def _kmer_tokenizer(sequence, k):
     _mask = np.uint64((np.uint64(1) << np.uint64(2*k))-1)

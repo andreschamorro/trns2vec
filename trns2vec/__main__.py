@@ -125,7 +125,7 @@ def main():
         all_tokens = list(itertools.chain.from_iterable(tokens_by_trns_id.values()))
         v.build(all_tokens, max_size=args.vocab_size, rare_threshold=args.vocab_rare_threshold)
         if args.save_vocab:
-            v.save(os.path.join(checkpoint_dir, 'trns2vec.vocab'))
+            v.save(os.path.join(checkpoint_dir, 'trns2vec_{k}.vocab'.format(k=args.k)))
 
     token_ids_by_trns_id = {d: v.to_ids(ts) for d, ts in tokens_by_trns_id.items()}
 
